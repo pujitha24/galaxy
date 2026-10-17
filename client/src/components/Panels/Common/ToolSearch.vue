@@ -3,7 +3,7 @@ import { storeToRefs } from "pinia";
 import { nextTick } from "vue";
 import { onMounted, onUnmounted, type PropType, watch } from "vue";
 
-import { FAVORITES_KEYS, searchTools } from "@/components/Panels/utilities";
+import { FAVORITES_KEYS, MIN_QUERY_LENGTH, searchTools } from "@/components/Panels/utilities";
 import { type Tool, type ToolPanelItem, type ToolSection, useToolStore } from "@/stores/toolStore";
 import { useUserStore } from "@/stores/userStore";
 import _l from "@/utils/localization";
@@ -12,8 +12,6 @@ import { toRawDeep } from "@/utils/toRawDeep";
 import GAlert from "@/components/BaseComponents/GAlert.vue";
 import DelayedInput from "@/components/Common/DelayedInput.vue";
 import LoadingSpan from "@/components/LoadingSpan.vue";
-
-const MIN_QUERY_LENGTH = 3;
 
 const props = defineProps({
     currentPanelView: {

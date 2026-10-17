@@ -25,6 +25,8 @@ import type {
 import levenshteinDistance from "@/utils/levenshtein";
 import { compareToolVersions } from "@/utils/tool-version";
 
+/** Minimum number of characters in a tool search query (short names such as `jq` must be findable) */
+export const MIN_QUERY_LENGTH = 2;
 export const FAVORITES_KEYS = ["#favs", "#favorites", "#favourites"];
 
 /** Build a ToolSection object */

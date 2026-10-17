@@ -11,6 +11,7 @@ import {
     filterTools,
     getValidPanelItems,
     getValidToolsInEachSection,
+    MIN_QUERY_LENGTH,
     searchObjectsByKeys,
     searchTools,
     type SearchCommonKeys,
@@ -591,5 +592,18 @@ describe("searchTools tool-lineage de-duplication", () => {
 
         const { results } = searchTools(distinctTools, "pyGenomeTracks", panel);
         expect(results).toHaveLength(2);
+    });
+});
+
+describe("searchTools with short queries", () => {
+    it("finds a tool whose name is only two characters long", () => {
+        const jq = "toolshed.g2.bx.psu.edu/repos/iuc/jq/jq/1.8.2+galaxy0";
+        const tools = [{ id: jq, name: "jq", description: "Process JSON" }] as unknown as Tool[];
+        const panel = {
+            json: { model_class: "ToolSection", id: "json", name: "JSON", tools: [jq] },
+        } as unknown as Record<string, ToolPanelItem>;
+
+        expect(MIN_QUERY_LENGTH).toBeLessThanOrEqual(2);
+        expect(searchTools(tools, "jq", panel).results).toEqual([jq]);
     });
 });

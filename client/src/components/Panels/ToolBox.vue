@@ -28,6 +28,7 @@ import {
     getValidPanelItems,
     getValidToolsInEachSection,
     getVisibleTools,
+    MIN_QUERY_LENGTH,
     UNSECTIONED_SECTION,
 } from "./utilities";
 
@@ -101,7 +102,7 @@ const toolStore = useToolStore();
 
 const { currentPanelView, currentToolSections, defaultPanelView, toolSections } = storeToRefs(toolStore);
 const hasResults = computed(() => results.value.length > 0);
-const queryTooShort = computed(() => query.value && query.value.length < 3);
+const queryTooShort = computed(() => query.value && query.value.length < MIN_QUERY_LENGTH);
 const queryFinished = computed(() => query.value && queryPending.value != true);
 const showMyToolsLanding = computed(() => props.favoritesDefault && !query.value);
 
