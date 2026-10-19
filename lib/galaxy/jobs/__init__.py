@@ -1697,6 +1697,9 @@ class MinimalJobWrapper(HasResourceParameters):
                 if tag_limit := destination_total_concurrent_jobs.get(tag):
                     destination_tag_limits[tag] = tag_limit
 
+        # RESUBMITTED jobs are deliberately not counted: they have not been dispatched to a
+        # runner yet, and counting them (including the job being queued) can deadlock a user
+        # whose resubmitted jobs alone reach the limit.
         conditions = [Job.id == job.id, Job.state.in_((Job.states.NEW, Job.states.RESUBMITTED))]
 
         if job.user_id:
@@ -1708,7 +1711,6 @@ class MinimalJobWrapper(HasResourceParameters):
                             [
                                 Job.states.QUEUED,
                                 Job.states.RUNNING,
-                                Job.states.RESUBMITTED,
                             ]
                         ),
                         Job.user_id == job.user_id,
@@ -1728,7 +1730,6 @@ class MinimalJobWrapper(HasResourceParameters):
                                 [
                                     Job.states.QUEUED,
                                     Job.states.RUNNING,
-                                    Job.states.RESUBMITTED,
                                 ]
                             ),
                             Job.destination_id == job_destination.id,
@@ -1748,7 +1749,6 @@ class MinimalJobWrapper(HasResourceParameters):
                             [
                                 Job.states.QUEUED,
                                 Job.states.RUNNING,
-                                Job.states.RESUBMITTED,
                             ]
                         ),
                         Job.session_id == job.galaxy_session.id,
@@ -1767,7 +1767,6 @@ class MinimalJobWrapper(HasResourceParameters):
                             [
                                 Job.states.QUEUED,
                                 Job.states.RUNNING,
-                                Job.states.RESUBMITTED,
                             ]
                         ),
                         Job.destination_id == job_destination.id,
@@ -1788,7 +1787,6 @@ class MinimalJobWrapper(HasResourceParameters):
                                 [
                                     Job.states.QUEUED,
                                     Job.states.RUNNING,
-                                    Job.states.RESUBMITTED,
                                 ]
                             ),
                             Job.destination_id.in_(destination_ids),

@@ -133,3 +133,40 @@ def test_destination_tag_limit():
     # Test at limit
     result = job_wrapper.queue_with_limit(job, job_destination_mock)
     assert result is False
+
+
+def test_resubmitted_jobs_do_not_block_queueing():
+    app = create_mock_app()
+    limits = app.job_config.limits
+    limits.registered_user_concurrent_jobs = 2
+    limits.destination_user_concurrent_jobs["one"] = 2
+    limits.destination_total_concurrent_jobs["one"] = 2
+    limits.destination_total_concurrent_jobs["two"] = 2
+    job_destination_mock = create_mock_destination()
+    jobs = [create_mock_job(app, user_id=1, state="resubmitted") for _ in range(3)]
+    job_wrapper = MinimalJobWrapper(jobs[0], app)  # type: ignore[arg-type]
+
+    assert job_wrapper.queue_with_limit(jobs[0], job_destination_mock) is True
+    assert jobs[0].state == Job.states.QUEUED
+
+
+def test_resubmitted_anonymous_jobs_do_not_block_queueing():
+    app = create_mock_app()
+    app.job_config.limits.anonymous_user_concurrent_jobs = 1
+    job_wrapper = create_job_wrapper(app, session_id=1)
+    create_mock_job(app, session_id=1, state="resubmitted")
+
+    assert job_wrapper.queue_with_limit(job_wrapper.get_job(), create_mock_destination()) is True
+
+
+def test_resubmitted_jobs_do_not_relax_running_count():
+    app = create_mock_app()
+    app.job_config.limits.destination_user_concurrent_jobs["one"] = 2
+    job_destination_mock = create_mock_destination()
+    for state in ("running", "queued"):
+        create_mock_job(app, user_id=1, state=state).destination_id = "one"
+    job = create_mock_job(app, user_id=1, state="resubmitted")
+    job_wrapper = MinimalJobWrapper(job, app)  # type: ignore[arg-type]
+    app.model.session.commit()
+
+    assert job_wrapper.queue_with_limit(job, job_destination_mock) is False
