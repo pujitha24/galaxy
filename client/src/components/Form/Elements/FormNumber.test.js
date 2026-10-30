@@ -219,4 +219,23 @@ describe("FormNumber", () => {
             expectStep(testValues[index].value, testValues[index].step);
         }
     });
+
+    it("warns about an out-of-range value on load without changing it", async () => {
+        const wrapper = await mountFormNumber({ value: 9, type: "integer", min: 1, max: 5 });
+        await flushPromises();
+        const alert = await getAlert(wrapper);
+        expect(alert.exists()).toBe(true);
+        expect(alert.text()).toContain("9 is out of range! (9 > 5)");
+        expect(wrapper.emitted().input).toBeUndefined();
+        wrapper.unmount();
+    });
+
+    it("does not warn on load when the value is within range or empty", async () => {
+        for (const value of [3, "", undefined]) {
+            const wrapper = await mountFormNumber({ value, type: "integer", min: 1, max: 5 });
+            await flushPromises();
+            expect((await getAlert(wrapper)).exists()).toBe(false);
+            wrapper.unmount();
+        }
+    });
 });

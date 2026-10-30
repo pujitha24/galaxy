@@ -144,6 +144,12 @@ export default {
             return 0.001;
         },
     },
+    mounted() {
+        // Warn about a pre-existing out-of-range value without changing it.
+        if (this.isOutOfRange(this.value)) {
+            this.showOutOfRangeWarning(this.value);
+        }
+    },
     methods: {
         onInputChange(value) {
             this.resetAlert();
