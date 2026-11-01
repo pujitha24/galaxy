@@ -3151,8 +3151,8 @@ class Tool(UsesDictVisibleKeys, MaybeToolParameterBundle):
         tool_dict["versions"] = self.tool_versions
         tool_dict["hidden_versions"] = self.hidden_tool_versions
 
-        if self.dynamic_tool:
-            tool_dict["uuid"] = str(self.dynamic_tool.uuid)
+        if self.dynamic_tool_uuid:
+            tool_dict["uuid"] = str(self.dynamic_tool_uuid)
 
         # Fill in ToolShedRepository info
         if hasattr(self, "tool_shed") and self.tool_shed:
