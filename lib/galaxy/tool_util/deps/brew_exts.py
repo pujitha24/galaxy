@@ -29,6 +29,7 @@ import re
 import string
 import subprocess
 import sys
+from shutil import which
 
 WHITESPACE_PATTERN = re.compile(r"[\s]+")
 
@@ -544,15 +545,6 @@ def ensure_brew_on_path(args):
         ensure_on_path(default_brew_path)
     else:
         raise Exception(NO_BREW_ERROR_MESSAGE)
-
-
-def which(file):
-    # http://stackoverflow.com/questions/5226958/which-equivalent-function-in-python
-    for path in os.environ["PATH"].split(":"):
-        if os.path.exists(f"{path}/{file}"):
-            return f"{path}/{file}"
-
-    return None
 
 
 if __name__ == "__main__":
