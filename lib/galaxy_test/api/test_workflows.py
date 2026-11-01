@@ -909,7 +909,7 @@ steps:
             assert input_options["extensions"] == ["tabular"]
             assert not input_options["options"]["hda"]
 
-    def test_update(self):
+    def test_update(self) -> None:
         original_workflow = self.workflow_populator.load_workflow(name="test_import")
         uuids = {}
         labels = {}
@@ -932,41 +932,41 @@ steps:
         upload_response = self.__test_upload(workflow=original_workflow)
         workflow_id = upload_response.json()["id"]
 
-        def update(workflow_object):
+        def update(workflow_object: dict) -> Response:
             put_response = self._update_workflow(workflow_id, workflow_object)
             self._assert_status_code_is(put_response, 200)
             return put_response
 
         workflow_content = self._download_workflow(workflow_id)
         steps = workflow_content["steps"]
+        original_positions = {order_index: dict(step_dict["position"]) for order_index, step_dict in steps.items()}
+        # Galaxy normalizes step positions so that the minimum left and top
+        # are 0, so use new positions that are already normalized.
+        new_positions = {
+            order_index: {"top": 20 * int(order_index), "left": 10 * int(order_index)} for order_index in steps
+        }
 
-        def tweak_step(step):
-            order_index, step_dict = step
+        for order_index, step_dict in steps.items():
             check_label_and_uuid(order_index, step_dict)
-            assert step_dict["position"]["top"] != 1
-            assert step_dict["position"]["left"] != 1
-            step_dict["position"] = {"top": 1, "left": 1}
-
-        map(tweak_step, steps.items())
+            assert step_dict["position"] != new_positions[order_index]
+            step_dict["position"] = new_positions[order_index]
 
         update(workflow_content)
 
-        def check_step(step):
-            order_index, step_dict = step
-            check_label_and_uuid(order_index, step_dict)
-            assert step_dict["position"]["top"] == 1
-            assert step_dict["position"]["left"] == 1
-
         updated_workflow_content = self._download_workflow(workflow_id)
-        map(check_step, updated_workflow_content["steps"].items())
+        for order_index, step_dict in updated_workflow_content["steps"].items():
+            check_label_and_uuid(order_index, step_dict)
+            assert step_dict["position"] == new_positions[order_index]
 
         # Re-update against original workflow...
         update(original_workflow)
 
         updated_workflow_content = self._download_workflow(workflow_id)
 
-        # Make sure the positions have been updated.
-        map(tweak_step, updated_workflow_content["steps"].items())
+        # Make sure the original positions have been restored.
+        for order_index, step_dict in updated_workflow_content["steps"].items():
+            check_label_and_uuid(order_index, step_dict)
+            assert step_dict["position"] == original_positions[order_index]
 
     def test_update_tags(self):
         workflow_object = self.workflow_populator.load_workflow(name="test_import")
@@ -12284,7 +12284,7 @@ outer_input:
 
         return target_state_reached
 
-    def _update_workflow(self, workflow_id, workflow_object):
+    def _update_workflow(self, workflow_id: str, workflow_object: dict) -> Response:
         return self.workflow_populator.update_workflow(workflow_id, workflow_object)
 
     def _invocation_step_details(self, workflow_id, invocation_id, step_id):

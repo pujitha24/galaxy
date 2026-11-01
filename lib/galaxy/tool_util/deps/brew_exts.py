@@ -376,7 +376,8 @@ class EnvAction:
     @staticmethod
     def build_env(env_actions):
         new_env = os.environ.copy()
-        (env_action.modify_environ(new_env) for env_action in env_actions)
+        for env_action in env_actions:
+            env_action.modify_environ(new_env)
         return new_env
 
     def modify_environ(self, environ):
