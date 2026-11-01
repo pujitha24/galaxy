@@ -658,6 +658,10 @@ class ToolBox(AbstractToolBox):
             raise Exception(f"Unknown tool representation format [{tool_format}].")
         tool = create_tool_from_source(self.app, tool_source=tool_source, tool_dir=None, dynamic=True)
         tool.dynamic_tool = dynamic_tool
+        # Snapshot while the ORM row is session-attached; later reads would raise
+        # DetachedInstanceError.
+        tool.dynamic_tool_id = dynamic_tool.id
+        tool.dynamic_tool_uuid = dynamic_tool.uuid if isinstance(dynamic_tool.uuid, UUID) else None
         return tool
 
     def tool_for_job(
@@ -1029,6 +1033,10 @@ class Tool(UsesDictVisibleKeys, ToolParameterBundle):
         self.rerun = False
         # This will be non-None for tools loaded from the database (DynamicTool objects).
         self.dynamic_tool: Optional[DynamicTool] = None
+        # Primitives snapshotted from DynamicTool so readers of this cached tool never
+        # touch a possibly-detached ORM row.
+        self.dynamic_tool_id: Optional[int] = None
+        self.dynamic_tool_uuid: Optional[UUID] = None
         # Define a place to keep track of all input   These
         # differ from the inputs dictionary in that inputs can be page
         # elements like conditionals, but input_params are basic form
@@ -2974,8 +2982,8 @@ class Tool(UsesDictVisibleKeys, ToolParameterBundle):
         tool_dict["versions"] = self.tool_versions
         tool_dict["hidden_versions"] = self.hidden_tool_versions
 
-        if self.dynamic_tool:
-            tool_dict["uuid"] = str(self.dynamic_tool.uuid)
+        if self.dynamic_tool_uuid:
+            tool_dict["uuid"] = str(self.dynamic_tool_uuid)
 
         # Fill in ToolShedRepository info
         if hasattr(self, "tool_shed") and self.tool_shed:
